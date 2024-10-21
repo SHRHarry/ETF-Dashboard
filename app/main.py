@@ -1,4 +1,5 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 
@@ -7,6 +8,15 @@ from app.dividends_calculator import calc_total_dividends, calc_individual_stock
 
 app = FastAPI()
 create_tables()
+
+# 配置 CORS 中間件
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # 你可以具體設置前端應用的URL，例如 'http://localhost:3000'
+    allow_credentials=True,
+    allow_methods=["*"],  # 允許所有 HTTP 方法
+    allow_headers=["*"],  # 允許所有 HTTP 標頭
+)
 
 # Pydantic 模型，用於增加股數時的請求數據
 class StockUpdate(BaseModel):
