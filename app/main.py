@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from app.model import get_db_connection, create_tables
-from app.dividends_calculator import calc_total_dividends
+from app.dividends_calculator import calc_total_dividends, calc_individual_stock_dividends
 
 app = FastAPI()
 create_tables()
@@ -16,7 +16,7 @@ class StockUpdate(BaseModel):
 
 # 1. 取得總股利
 @app.get("/total_dividends")
-def get_total_dividends():
+async def get_total_dividends():
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute('SELECT * FROM holdings')
@@ -28,16 +28,18 @@ def get_total_dividends():
 
 # 2. 取得個別股票的股利
 @app.get("/individual_stock_dividends")
-def get_individual_stock_dividends(symbol: int):
+async def get_individual_stock_dividends(symbol: str):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT shares, dividend FROM holdings WHERE symbol = ?', (symbol,))
-    rows = cursor.fetchall()
+    cursor.execute('SELECT * FROM holdings WHERE symbol = ?', (symbol,))
+    holdings = cursor.fetchall()
     conn.close()
-    if not rows:
+    if not holdings:
         raise HTTPException(status_code=404, detail="Stock not found")
-    total_dividend = sum(row["shares"] * row["dividend"] for row in rows)
-    return {"symbol": symbol, "total_dividend": total_dividend}
+    
+    receive_dividends, receive_shares = calc_individual_stock_dividends(holdings)
+    
+    return {"symbol": symbol, "receive_dividends": receive_dividends, "receive_shares": receive_shares}
 
 # 3. 增加個別股票的股數
 @app.post("/individual_stock_dividends")
@@ -51,11 +53,6 @@ def add_stock(stock: StockUpdate):
     conn.commit()
     conn.close()
     return {"message": "Stock added successfully"}
-    
-    # if stock_update.symbol not in holdings:
-    #     raise HTTPException(status_code=404, detail="Stock not found")
-    # holdings[stock_update.symbol]["shares"] += stock_update.shares
-    # return {"symbol": stock_update.symbol, "new_shares": holdings[stock_update.symbol]["shares"]}
 
 # 4. 刪除個別股票的股數
 @app.delete("/individual_stock_dividends")

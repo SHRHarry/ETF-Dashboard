@@ -1,7 +1,9 @@
+import time
 import requests 
 import numpy as np 
 import pandas as pd
 from bs4 import BeautifulSoup
+from fastapi import HTTPException
 
 def process_data_by_symbol(holdings):
     processed_holdings = {}
@@ -14,24 +16,32 @@ def process_data_by_symbol(holdings):
         
     return processed_holdings
 
-def get_dividend_list(symbol):     
+def get_dividend_list(symbol, retries=3, delay=1):
     div_url = f'https://www.moneydj.com/ETF/X/Basic/Basic0005.xdjhtm?etfid={symbol}.TW'
-    r = requests.get(div_url)
-    soup = BeautifulSoup(r.text, "html.parser")
-    table = soup.findAll("table", class_ = "datalist")[0]
-
-    list_rows = []
-    rows = table.find_all('tr')
-    
-    for row in rows:
-        row_td = [i.text for i in row.find_all('td')]
-        if len(row_td)>1:
-            list_rows.append(np.array(row_td)[[0,1,7]])
+    for attempt in range(retries):
+        try:
+            r = requests.get(div_url)
+            r.raise_for_status()  # 若狀態碼非200，將拋出HTTPError
+            soup = BeautifulSoup(r.text, "html.parser")
+            table = soup.findAll("table", class_="datalist")[0]
             
-    df = pd.DataFrame(list_rows, columns = ['ex_div_date','pay_date','div_amount'])
-    df['symbol_id'] = [symbol] * len(df)
-    
-    return df
+            list_rows = []
+            rows = table.find_all('tr')
+            
+            for row in rows:
+                row_td = [i.text for i in row.find_all('td')]
+                if len(row_td)>1:
+                    list_rows.append(np.array(row_td)[[0,1,7]])
+                    
+            df = pd.DataFrame(list_rows, columns = ['ex_div_date','pay_date','div_amount'])
+            df['symbol_id'] = [symbol] * len(df)
+            
+            return df
+        except (requests.exceptions.HTTPError, IndexError) as e:
+            print(f"Attempt {attempt + 1} failed: {e}")
+            time.sleep(delay)  # 重試前的延遲
+    # 如果多次嘗試後仍失敗
+    raise HTTPException(status_code=404, detail="Unable to retrieve data after multiple attempts.")
 
 def calc_total_dividends(holdings):
     total_dividends = 0
@@ -43,7 +53,7 @@ def calc_total_dividends(holdings):
         df = get_dividend_list(symbol)
         df['ex_div_date'] = pd.to_datetime(df['ex_div_date'])
         
-        dividend_symbol = 0
+        # dividend_symbol = 0
         for dic in lst:
             purchase_date = pd.to_datetime(dic['purchase_date'])
             shares = dic['shares']
@@ -55,32 +65,36 @@ def calc_total_dividends(holdings):
             for _, row in eligible_dividends.iterrows():
                 dividend = float(row['div_amount']) * shares
                 total_dividends += dividend
-                dividend_symbol += dividend
+                # dividend_symbol += dividend
             
-        print(f"股票代號: {symbol}, 獲得股利: {dividend_symbol}")
+        # print(f"股票代號: {symbol}, 獲得股利: {dividend_symbol}")
     
-    print(f"總股利: {total_dividends}")
+    # print(f"總股利: {total_dividends}")
     return total_dividends
 
-def get_total_shares(holdings):
-    # 用字典來儲存每個股票代號的總股數
-    share_count = {}
-
-    for holding in holdings:
-        symbol = holding['symbol']
-        shares = holding['shares']
-        
-        if symbol in share_count:
-            share_count[symbol] += shares
-        else:
-            share_count[symbol] = shares
-
-    # 打印每個股票的總股數
-    for symbol, total_shares in share_count.items():
-        print(f"股票代號: {symbol}, 總股數: {total_shares}")
+def calc_individual_stock_dividends(holdings):
+    individual_dividends = 0
+    individual_shares = 0
     
-    # 或者返回結果
-    return share_count
+    holdings = process_data_by_symbol(holdings)
+    symbol = next(iter(holdings.keys()))
+    df = get_dividend_list(symbol)
+    df['ex_div_date'] = pd.to_datetime(df['ex_div_date'])
+    
+    for dic in next(iter(holdings.values())):
+        purchase_date = pd.to_datetime(dic['purchase_date'])
+        shares = dic['shares']
+        individual_shares += shares
+    
+        # 篩選除息日 >= 購買日
+        eligible_dividends = df[df['ex_div_date'] >= purchase_date]
+    
+        # 計算股利
+        for _, row in eligible_dividends.iterrows():
+            dividend = float(row['div_amount']) * shares
+            individual_dividends += dividend
+    
+    return individual_dividends, individual_shares
 
 if __name__ == "__main__":
     # 購買資料
@@ -144,4 +158,3 @@ if __name__ == "__main__":
     #     {'purchase_date': '2024/9/6', 'symbol': '00919', 'shares': 1000}
     # ]
     calc_total_dividends(holdings)
-    get_total_shares(holdings)
