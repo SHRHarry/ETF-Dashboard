@@ -3,13 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
 
-from app.model import get_db_connection, create_tables
+from app.model import SqlHandler
 from app.dividends_calculator import calc_total_dividends, calc_individual_stock_dividends
 
 app = FastAPI()
-create_tables()
+sql_handler = SqlHandler()
 
-# 配置 CORS 中間件
+# CORS Configs
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # 你可以具體設置前端應用的URL，例如 'http://localhost:3000'
@@ -18,73 +18,59 @@ app.add_middleware(
     allow_headers=["*"],  # 允許所有 HTTP 標頭
 )
 
-# Pydantic 模型，用於增加股數時的請求數據
+# Pydantic Model for Data Validation
 class StockUpdate(BaseModel):
     symbol: str
     shares: int
     purchase_date: datetime
 
-# 1. 取得總股利
 @app.get("/total_dividends")
 async def get_total_dividends():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM holdings')
-    holdings = cursor.fetchall()
-    conn.close()
+    holdings = sql_handler.select_all_data()
     total_dividends = calc_total_dividends(holdings)
     
     return {"total_dividends": total_dividends or 0}
 
-# 2. 取得個別股票的股利
 @app.get("/individual_stock_dividends")
 async def get_individual_stock_dividends(symbol: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('SELECT * FROM holdings WHERE symbol = ?', (symbol,))
-    holdings = cursor.fetchall()
-    conn.close()
+    holdings = sql_handler.select_by_symbol(symbol)
     if not holdings:
         raise HTTPException(status_code=404, detail="Stock not found")
     
+    for h in holdings:
+        print(h["id"])
     receive_dividends, receive_shares = calc_individual_stock_dividends(holdings)
     
     return {"symbol": symbol, "receive_dividends": receive_dividends, "receive_shares": receive_shares}
 
-# 3. 增加個別股票的股數
+@app.get("/all_stocks")
+async def get_all_stocks():
+    holdings = sql_handler.select_all_data()
+    
+    if not holdings:
+        return []
+
+    return [{"id": holding["id"], "symbol": holding["symbol"], "shares": holding["shares"], "purchase_date": holding["purchase_date"]}
+            for holding in holdings]
+
 @app.post("/individual_stock_dividends")
 def add_stock(stock: StockUpdate):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('''
-    INSERT INTO holdings (purchase_date, symbol, shares) 
-    VALUES (?, ?, ?)
-    ''', (stock.purchase_date.isoformat(), stock.symbol, stock.shares))
-    conn.commit()
-    conn.close()
+    sql_handler.insert_data(stock)
     return {"message": "Stock added successfully"}
 
-# 4. 刪除個別股票的股數
+@app.put("/individual_stock_dividends/{stock_id}")
+async def update_individual_stock(stock_id: int, stock: StockUpdate):
+    sql_handler.edit_data(stock_id, stock)
+    return {"message": f"Stock with id {stock_id} updated successfully"}
+
 @app.delete("/individual_stock_dividends")
 def delete_individual_stock(symbol: str):
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM holdings WHERE symbol = ?', (symbol,))
-    if cursor.rowcount == 0:
-        conn.close()
-        raise HTTPException(status_code=404, detail="Stock not found")
-    conn.commit()
-    conn.close()
+    sql_handler.delete_by_symbol(symbol)
     return {"message": f"Stock with symbol {symbol} deleted successfully"}
 
-# 5. 刪除全部股數
 @app.delete("/total_dividends")
 def delete_all_stocks():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute('DELETE FROM holdings')
-    conn.commit()
-    conn.close()
+    sql_handler.delete_all_data()
     return {"message": "All stocks deleted successfully"}
 
 if __name__ == "__main__":

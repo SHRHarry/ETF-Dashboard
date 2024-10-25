@@ -2,8 +2,8 @@ import sys
 sys.path.insert(0, './')
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.model import get_db_connection
+from app.main import app, StockUpdate
+from app.model import SqlHandler
 
 client = TestClient(app)
 
@@ -23,12 +23,8 @@ def test_add_stock_shares():
     assert data["message"] == "Stock added successfully"
     
 def test_get_individual_stock_dividends():
-    conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("CREATE TABLE IF NOT EXISTS holdings (id INTEGER PRIMARY KEY, symbol TEXT, shares INTEGER, purchase_date TEXT)")
-    cursor.execute("INSERT INTO holdings (symbol, shares, purchase_date) VALUES ('0056', 1000, '2024-03-14')")
-    conn.commit()
-    conn.close()
+    sql_handler = SqlHandler()
+    sql_handler.insert_data(StockUpdate(symbol="0056", shares=1000, purchase_date="2024-03-14"))
     
     stock_data = {"symbol": "0056"}
     response = client.get("/individual_stock_dividends", params=stock_data)
