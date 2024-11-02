@@ -99,13 +99,13 @@ def calc_individual_stock_dividends(holdings):
 if __name__ == "__main__":
     # 購買資料
     holdings = [
-        {'purchase_date': '2024/3/14', 'symbol': '00878', 'shares': 1000},
-        {'purchase_date': '2024/3/14', 'symbol': '0056', 'shares': 1000},
-        {'purchase_date': '2024/3/14', 'symbol': '00919', 'shares': 1000},
-        {'purchase_date': '2024/4/17', 'symbol': '0056', 'shares': 1000},
-        {'purchase_date': '2024/5/15', 'symbol': '00878', 'shares': 1000},
-        {'purchase_date': '2024/5/22', 'symbol': '00919', 'shares': 1000},
-        {'purchase_date': '2024/6/6', 'symbol': '00919', 'shares': 1000}
+        {'purchase_date': '2024-03-14', 'symbol': '00878', 'shares': 1000},
+        {'purchase_date': '2024-03-14', 'symbol': '0056', 'shares': 1000},
+        {'purchase_date': '2024-03-14', 'symbol': '00919', 'shares': 1000},
+        {'purchase_date': '2024-04-17', 'symbol': '0056', 'shares': 1000},
+        {'purchase_date': '2024-05-15', 'symbol': '00878', 'shares': 1000},
+        {'purchase_date': '2024-05-22', 'symbol': '00919', 'shares': 1000},
+        {'purchase_date': '2024-06-06', 'symbol': '00919', 'shares': 1000}
     ]
     # holdings = [
     #     {'purchase_date': '2021/9/10', 'symbol': '00919', 'shares': 1000},

@@ -21,6 +21,14 @@ class SqlHandler:
         conn.close()
         return holdings
     
+    def select_by_id(self, stock_id):
+        conn = self._get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('SELECT * FROM holdings WHERE id = ?', (stock_id,))
+        holdings = cursor.fetchall()
+        conn.close()
+        return holdings
+    
     def insert_data(self, stock):
         conn = self._get_db_connection()
         cursor = conn.cursor()
@@ -36,9 +44,9 @@ class SqlHandler:
         cursor = conn.cursor()
         cursor.execute('''
             UPDATE holdings
-            SET shares = ?, purchase_date = ?
+            SET symbol = ?, shares = ?, purchase_date = ?
             WHERE id = ?
-        ''', (stock.shares, stock.purchase_date, stock_id))
+        ''', (stock.symbol, stock.shares, stock.purchase_date, stock_id))
         if cursor.rowcount == 0:
             conn.close()
             raise HTTPException(status_code=404, detail="Stock not found")
@@ -53,10 +61,10 @@ class SqlHandler:
         conn.commit()
         conn.close()
     
-    def delete_by_symbol(self, symbol):
+    def delete_by_id(self, stock_id):
         conn = self._get_db_connection()
         cursor = conn.cursor()
-        cursor.execute('DELETE FROM holdings WHERE symbol = ?', (symbol,))
+        cursor.execute('DELETE FROM holdings WHERE id = ?', (stock_id,))
         if cursor.rowcount == 0:
             conn.close()
             raise HTTPException(status_code=404, detail="Stock not found")
@@ -79,5 +87,5 @@ class SqlHandler:
     
     def _get_db_connection(self):
         conn = sqlite3.connect('etf_holdings.db')
-        conn.row_factory = sqlite3.Row  # 以行為基礎返回字典
+        conn.row_factory = sqlite3.Row
         return conn

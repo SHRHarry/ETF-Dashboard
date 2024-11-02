@@ -37,11 +37,17 @@ async def get_individual_stock_dividends(symbol: str):
     if not holdings:
         raise HTTPException(status_code=404, detail="Stock not found")
     
-    for h in holdings:
-        print(h["id"])
     receive_dividends, receive_shares = calc_individual_stock_dividends(holdings)
     
     return {"symbol": symbol, "receive_dividends": receive_dividends, "receive_shares": receive_shares}
+
+@app.get("/individual_stock_dividends/{stock_id}")
+async def get_individual_stock(stock_id: int):
+    holding = sql_handler.select_by_id(stock_id)
+    if not holding:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    return {"id": holding[0]["id"], "symbol": holding[0]["symbol"], "shares": holding[0]["shares"], "purchase_date": holding[0]["purchase_date"]}
 
 @app.get("/all_stocks")
 async def get_all_stocks():
@@ -63,10 +69,10 @@ async def update_individual_stock(stock_id: int, stock: StockUpdate):
     sql_handler.edit_data(stock_id, stock)
     return {"message": f"Stock with id {stock_id} updated successfully"}
 
-@app.delete("/individual_stock_dividends")
-def delete_individual_stock(symbol: str):
-    sql_handler.delete_by_symbol(symbol)
-    return {"message": f"Stock with symbol {symbol} deleted successfully"}
+@app.delete("/individual_stock_dividends/{stock_id}")
+def delete_individual_stock(stock_id: int):
+    sql_handler.delete_by_id(stock_id)
+    return {"message": f"Stock with stock_id {stock_id} deleted successfully"}
 
 @app.delete("/total_dividends")
 def delete_all_stocks():

@@ -1,0 +1,5 @@
+.table td {
+    text-align: center; /* 水平置中 */
+    vertical-align: middle; /* 垂直置中 */
+    font-size: 16px; /* 字體大小 */
+}
