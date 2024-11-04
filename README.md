@@ -5,5 +5,5 @@
 
 ## Web Preview
 <p align="center">
-<img src="fig/preview.png" width = "auto" height = "665" alt="preview" />
+<img src="fig/preview.png" width = "auto" height = "300" alt="preview" />
 </p>
