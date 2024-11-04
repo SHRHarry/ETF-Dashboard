@@ -2,13 +2,10 @@ import React, { useContext } from "react";
 
 const Header = ({ title }) => {
     return (
-        // <div className="has-text-centered m-6">
-        //     <h1 className="title">{title}</h1>
-        // </div>
-        <section class="hero is-small has-text-centered m-3">
+        <section class="hero is-small has-text-centered" style={{ background: "linear-gradient(135deg, #8e2de2, #4a00e0)"}}>
             <div class="hero-body">
                 <div class="container">
-                    <h1 class="title">
+                    <h1 class="title has-text-white">
                     {title}
                     </h1>
                 </div>

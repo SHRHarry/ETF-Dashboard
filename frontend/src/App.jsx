@@ -32,11 +32,12 @@ const App = () => {
     <>
       <Header title="ETF Dividend Tracker"/>
       <div className="columns">
-        <div className="column"></div>
+      <DividendTracker />
+      {/* <div className="column"></div>
         <div className="column m-5 is-half">
         <DividendTracker />
         </div>
-        <div className="column"></div>
+        <div className="column"></div> */}
       </div>
       
     </>

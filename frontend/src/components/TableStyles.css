@@ -1,3 +1,13 @@
+.table-container {
+    max-height: 485px; /* Set a fixed height for the table body */
+    overflow-y: auto; /* Enable vertical scrolling */
+  }
+  
+  .table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
 .table td {
     text-align: center; /* 水平置中 */
     vertical-align: middle; /* 垂直置中 */

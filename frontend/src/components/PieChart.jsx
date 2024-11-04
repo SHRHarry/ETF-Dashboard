@@ -38,8 +38,8 @@ const PieChart = ({ data }) => {
   };
 
   return (
-    <div style={{ width: '400px', height: '400px', margin: '0 auto' }}>
-      <Pie data={pieData} options={chartOptions} />
+    <div style={{ height: '400px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+      <Pie data={pieData} options={{ ...chartOptions, maintainAspectRatio: false }} />
     </div>
   );
 };

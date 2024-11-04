@@ -107,25 +107,27 @@ const DividendTracker = () => {
 
   return (
     <>
-    <StockModal
+    <div className="column m-5 is-one-third">
+      <StockModal
         active={activeModal}
         handleModal={handleModal}
         id={id}
         setError={setError}
         getTotalDividends={getTotalDividends}
       />
-    <section class="info-tiles m-3">
-        <div class="tile is-ancestor has-text-centered">
-            <div class="tile is-parent">
-                <article class="tile is-child box">
-                    <p class="title">${totalDividends}</p>
-                    <p class="subtitle">Total Dividends</p>
-                    {pieData.labels.length && <PieChart data={pieData} />}
-                </article>
-            </div>
-        </div>
-    </section>
-
+      <section class="info-tiles m-3">
+          <div class="tile is-ancestor has-text-centered">
+              <div class="tile is-parent">
+                  <article class="tile is-child box">
+                      <p class="title">${totalDividends}</p>
+                      <p class="subtitle">Total Dividends</p>
+                      {pieData.labels.length && <PieChart data={pieData} />}
+                  </article>
+              </div>
+          </div>
+      </section>
+    </div>
+    <div className="column m-5 is-half">
     <div className="columns is-centered is-gapless m-3">
       <div className="column is-half">
         <button
@@ -159,7 +161,8 @@ const DividendTracker = () => {
     ) : error || !allStocks ? (
       <p>{error}</p>
     ) : (
-      <table className="table is-fullwidth">
+      <div className='table-container'>
+        <table className="table is-fullwidth">
         <thead>
           <tr>
             <th>Symbol</th>
@@ -192,7 +195,9 @@ const DividendTracker = () => {
             ))}
           </tbody>
       </table>
+      </div>
     )}
+    </div>
     </>
   );
 };
