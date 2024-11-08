@@ -4,7 +4,7 @@ from pydantic import BaseModel
 from datetime import datetime
 
 from app.model import SqlHandler
-from app.dividends_calculator import calc_total_dividends, calc_individual_stock_dividends
+from app.dividends_calculator import calc_total_dividends, calc_individual_stock_dividends, calc_dividends_curr_month
 
 app = FastAPI()
 sql_handler = SqlHandler()
@@ -25,14 +25,17 @@ class StockUpdate(BaseModel):
     purchase_date: datetime
 
 @app.get("/total_dividends")
-async def get_total_dividends():
+def get_total_dividends():
     holdings = sql_handler.select_all_data()
+    if not holdings:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
     total_dividends = calc_total_dividends(holdings)
     
     return {"total_dividends": total_dividends or 0}
 
 @app.get("/individual_stock_dividends")
-async def get_individual_stock_dividends(symbol: str):
+def get_individual_stock_dividends(symbol: str):
     holdings = sql_handler.select_by_symbol(symbol)
     if not holdings:
         raise HTTPException(status_code=404, detail="Stock not found")
@@ -42,7 +45,7 @@ async def get_individual_stock_dividends(symbol: str):
     return {"symbol": symbol, "receive_dividends": receive_dividends, "receive_shares": receive_shares}
 
 @app.get("/individual_stock_dividends/{stock_id}")
-async def get_individual_stock(stock_id: int):
+def get_individual_stock(stock_id: int):
     holding = sql_handler.select_by_id(stock_id)
     if not holding:
         raise HTTPException(status_code=404, detail="Stock not found")
@@ -50,7 +53,7 @@ async def get_individual_stock(stock_id: int):
     return {"id": holding[0]["id"], "symbol": holding[0]["symbol"], "shares": holding[0]["shares"], "purchase_date": holding[0]["purchase_date"]}
 
 @app.get("/all_stocks")
-async def get_all_stocks():
+def get_all_stocks():
     holdings = sql_handler.select_all_data()
     
     if not holdings:
@@ -59,13 +62,22 @@ async def get_all_stocks():
     return [{"id": holding["id"], "symbol": holding["symbol"], "shares": holding["shares"], "purchase_date": holding["purchase_date"]}
             for holding in holdings]
 
+@app.get("/curr_month_dividends")
+def get_curr_month_dividends():
+    holdings = sql_handler.select_all_data()
+    if not holdings:
+        raise HTTPException(status_code=404, detail="Stock not found")
+    
+    curr_month_dividends = calc_dividends_curr_month(holdings)
+    return curr_month_dividends
+
 @app.post("/individual_stock_dividends")
 def add_stock(stock: StockUpdate):
     sql_handler.insert_data(stock)
     return {"message": "Stock added successfully"}
 
 @app.put("/individual_stock_dividends/{stock_id}")
-async def update_individual_stock(stock_id: int, stock: StockUpdate):
+def update_individual_stock(stock_id: int, stock: StockUpdate):
     sql_handler.edit_data(stock_id, stock)
     return {"message": f"Stock with id {stock_id} updated successfully"}
 

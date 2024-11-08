@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from 'axios';
 import moment from "moment";
 
-const StockModal = ({ active, handleModal, id, setError, getTotalDividends}) => {
+const StockModal = ({ active, handleModal, id, setError, getTotalDividends, getCurrentMonthDividends}) => {
     const [symbol, setSymbol] = useState("");
     const [shares, setShares] = useState("");
     const [purchaseDate, setPurchaseDate] = useState(new Date().toISOString().substring(0, 10));
@@ -23,6 +23,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends}) => 
         if (id) {
             getStockById();
             getTotalDividends();
+            getCurrentMonthDividends();
         }
       }, [id]);
     
@@ -45,6 +46,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends}) => 
             cleanFormData();
             handleModal();
             getTotalDividends();
+            getCurrentMonthDividends();
           } catch (error) {
             setError('Error creating stock dividends:', error);
           }
@@ -63,6 +65,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends}) => 
             cleanFormData();
             handleModal();
             getTotalDividends();
+            getCurrentMonthDividends();
           } catch (error) {
             setError('Error creating stock dividends:', error);
           }

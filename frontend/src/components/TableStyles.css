@@ -1,5 +1,5 @@
 .table-container {
-    max-height: 485px; /* Set a fixed height for the table body */
+    max-height: 720px; /* Set a fixed height for the table body */
     overflow-y: auto; /* Enable vertical scrolling */
   }
   

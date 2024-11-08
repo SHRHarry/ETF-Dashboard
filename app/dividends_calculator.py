@@ -1,5 +1,6 @@
 import time
-import requests 
+import requests
+import datetime
 import numpy as np 
 import pandas as pd
 from bs4 import BeautifulSoup
@@ -43,12 +44,36 @@ def get_dividend_list(symbol, retries=3, delay=1):
     # 如果多次嘗試後仍失敗
     raise HTTPException(status_code=404, detail="Unable to retrieve data after multiple attempts.")
 
+def calc_dividends_curr_month(holdings):
+    dividends_curr_month = {}
+    holdings = process_data_by_symbol(holdings)
+    
+    today = datetime.datetime.today()
+    # today = datetime.datetime.strptime("202407", "%Y%m")
+
+    for key, lst in holdings.items():
+        symbol = key
+        df = get_dividend_list(symbol)
+        df['ex_div_date'] = pd.to_datetime(df['ex_div_date'])
+        eligible_dividends = df[(df['ex_div_date'].dt.month == today.month) & (df['ex_div_date'].dt.year == today.year)]
+        curr_shares = 0
+        curr_dividends = 0
+        for dic in lst:
+            curr_shares += dic['shares']
+        
+        for _, row in eligible_dividends.iterrows():
+            curr_dividends = float(row['div_amount'])*curr_shares
+        
+        if curr_dividends > 0:
+            dividends_curr_month[key] = curr_dividends
+    
+    return dividends_curr_month
+
 def calc_total_dividends(holdings):
     total_dividends = 0
     holdings = process_data_by_symbol(holdings)
     
     for key, lst in holdings.items():
-        # 查詢股利資料
         symbol = key
         df = get_dividend_list(symbol)
         df['ex_div_date'] = pd.to_datetime(df['ex_div_date'])
@@ -60,6 +85,7 @@ def calc_total_dividends(holdings):
         
             # 篩選除息日 >= 購買日
             eligible_dividends = df[df['ex_div_date'] >= purchase_date]
+            # print(f"eligible_dividends = {eligible_dividends}")
         
             # 計算股利
             for _, row in eligible_dividends.iterrows():
@@ -97,7 +123,6 @@ def calc_individual_stock_dividends(holdings):
     return individual_dividends, individual_shares
 
 if __name__ == "__main__":
-    # 購買資料
     holdings = [
         {'purchase_date': '2024-03-14', 'symbol': '00878', 'shares': 1000},
         {'purchase_date': '2024-03-14', 'symbol': '0056', 'shares': 1000},
@@ -158,3 +183,4 @@ if __name__ == "__main__":
     #     {'purchase_date': '2024/9/6', 'symbol': '00919', 'shares': 1000}
     # ]
     calc_total_dividends(holdings)
+    calc_dividends_curr_month(holdings)

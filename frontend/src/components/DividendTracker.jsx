@@ -8,6 +8,7 @@ import StockModal from "./StockModal";
 
 const DividendTracker = () => {
   const [totalDividends, setTotalDividends] = useState(null);
+  const [currentDividends, setCurrentDividends] = useState([]);
   const [allStocks, setAllStocks] = useState(null);
   const [individualDividends, setIndividualDividends] = useState([]);
   const [pieData, setPieData] = useState({ labels: [], values: [] });
@@ -30,6 +31,7 @@ const DividendTracker = () => {
     }
     getAllStocks();
     getTotalDividends();
+    getCurrentMonthDividends();
   };
 
   const deleteTotalDividends = async (id) => {
@@ -42,6 +44,7 @@ const DividendTracker = () => {
     }
     getAllStocks();
     getTotalDividends();
+    getCurrentMonthDividends();
     setPieData({ labels: [], values: [] });
   };
 
@@ -58,6 +61,10 @@ const DividendTracker = () => {
 
   useEffect(() => {
     getAllStocks();
+  }, []);
+
+  useEffect(() => {
+    getCurrentMonthDividends();
   }, []);
 
   useEffect(() => {
@@ -95,6 +102,21 @@ const DividendTracker = () => {
     }
   };
 
+  const getCurrentMonthDividends = async () => {
+    try {
+      const response = await axios.get('http://localhost:8000/curr_month_dividends');
+      const formattedData = Object.entries(response.data).map(([symbol, amount]) => ({
+        symbol,
+        amount
+      }));
+      setCurrentDividends(formattedData);
+      setLoading(false);
+    } catch (error) {
+      setError('Failed to fetch current month dividends');
+      setLoading(false);
+    }
+  };
+
   const fetchIndividualDividends = async (symbol) => {
     try {
       setIndividualDividends([]);
@@ -114,6 +136,7 @@ const DividendTracker = () => {
         id={id}
         setError={setError}
         getTotalDividends={getTotalDividends}
+        getCurrentMonthDividends={getCurrentMonthDividends}
       />
       <section class="info-tiles m-3">
           <div class="tile is-ancestor has-text-centered">
@@ -122,6 +145,22 @@ const DividendTracker = () => {
                       <p class="title">${totalDividends}</p>
                       <p class="subtitle">Total Dividends</p>
                       {pieData.labels.length && <PieChart data={pieData} />}
+                  </article>
+              </div>
+          </div>
+      </section>
+      <section class="info-tiles m-3">
+          <div class="tile is-ancestor has-text-centered">
+              <div class="tile is-parent">
+                  <article class="tile is-child box">
+                      {/* <p class="title">${currentDividends}</p> */}
+                      {currentDividends.map((item, index) => (
+                        <div key={index}>
+                          <p class="title">${item.amount}</p>
+                          <p class="subtitle">Dividends you can receive this month from {item.symbol}</p>
+                        </div>
+                      ))}
+                      
                   </article>
               </div>
           </div>
