@@ -13,7 +13,7 @@ const App = () => {
         "Content-Type": "application/json",
       },
     };
-    const response = await fetch("http://localhost:8000/total_dividends", requestOptions);
+    const response = await fetch("https://etf-dashboard-1.onrender.com/total_dividends", requestOptions);
     const data = await response.json();
 
     if (!response.ok){
