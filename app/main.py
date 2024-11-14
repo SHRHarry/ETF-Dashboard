@@ -9,7 +9,7 @@ from app.dividends_calculator import calc_total_dividends, calc_individual_stock
 app = FastAPI()
 sql_handler = SqlHandler()
 dividends_router = APIRouter()
-app.include_router(dividends_router)
+
 
 # CORS Configs
 app.add_middleware(
@@ -92,6 +92,8 @@ def delete_individual_stock(stock_id: int):
 def delete_all_stocks():
     sql_handler.delete_all_data()
     return {"message": "All stocks deleted successfully"}
+
+app.include_router(dividends_router)
 
 if __name__ == "__main__":
     import uvicorn
