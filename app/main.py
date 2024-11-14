@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, APIRouter, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime
@@ -8,6 +8,8 @@ from app.dividends_calculator import calc_total_dividends, calc_individual_stock
 
 app = FastAPI()
 sql_handler = SqlHandler()
+dividends_router = APIRouter()
+app.include_router(dividends_router)
 
 # CORS Configs
 app.add_middleware(
@@ -24,7 +26,7 @@ class StockUpdate(BaseModel):
     shares: int
     purchase_date: datetime
 
-@app.get("/total_dividends")
+@dividends_router.get("/total_dividends")
 def get_total_dividends():
     holdings = sql_handler.select_all_data()
     if not holdings:
@@ -34,7 +36,7 @@ def get_total_dividends():
     
     return {"total_dividends": total_dividends or 0}
 
-@app.get("/individual_stock_dividends")
+@dividends_router.get("/individual_stock_dividends")
 def get_individual_stock_dividends(symbol: str):
     holdings = sql_handler.select_by_symbol(symbol)
     if not holdings:
@@ -44,7 +46,7 @@ def get_individual_stock_dividends(symbol: str):
     
     return {"symbol": symbol, "receive_dividends": receive_dividends, "receive_shares": receive_shares}
 
-@app.get("/individual_stock_dividends/{stock_id}")
+@dividends_router.get("/individual_stock_dividends/{stock_id}")
 def get_individual_stock(stock_id: int):
     holding = sql_handler.select_by_id(stock_id)
     if not holding:
@@ -52,7 +54,7 @@ def get_individual_stock(stock_id: int):
     
     return {"id": holding[0]["id"], "symbol": holding[0]["symbol"], "shares": holding[0]["shares"], "purchase_date": holding[0]["purchase_date"]}
 
-@app.get("/all_stocks")
+@dividends_router.get("/all_stocks")
 def get_all_stocks():
     holdings = sql_handler.select_all_data()
     
@@ -62,7 +64,7 @@ def get_all_stocks():
     return [{"id": holding["id"], "symbol": holding["symbol"], "shares": holding["shares"], "purchase_date": holding["purchase_date"]}
             for holding in holdings]
 
-@app.get("/curr_month_dividends")
+@dividends_router.get("/curr_month_dividends")
 def get_curr_month_dividends():
     holdings = sql_handler.select_all_data()
     if not holdings:
@@ -71,27 +73,27 @@ def get_curr_month_dividends():
     curr_month_dividends = calc_dividends_curr_month(holdings)
     return curr_month_dividends
 
-@app.post("/individual_stock_dividends")
+@dividends_router.post("/individual_stock_dividends")
 def add_stock(stock: StockUpdate):
     sql_handler.insert_data(stock)
     return {"message": "Stock added successfully"}
 
-@app.put("/individual_stock_dividends/{stock_id}")
+@dividends_router.put("/individual_stock_dividends/{stock_id}")
 def update_individual_stock(stock_id: int, stock: StockUpdate):
     sql_handler.edit_data(stock_id, stock)
     return {"message": f"Stock with id {stock_id} updated successfully"}
 
-@app.delete("/individual_stock_dividends/{stock_id}")
+@dividends_router.delete("/individual_stock_dividends/{stock_id}")
 def delete_individual_stock(stock_id: int):
     sql_handler.delete_by_id(stock_id)
     return {"message": f"Stock with stock_id {stock_id} deleted successfully"}
 
-@app.delete("/total_dividends")
+@dividends_router.delete("/total_dividends")
 def delete_all_stocks():
     sql_handler.delete_all_data()
     return {"message": "All stocks deleted successfully"}
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)
     # uvicorn.run("your_filename:app", host="0.0.0.0", port=8000, reload=True)
