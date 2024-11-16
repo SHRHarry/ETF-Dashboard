@@ -25,7 +25,7 @@ const DividendTracker = () => {
 
   const handleDelete = async (id) => {
     try{
-      const response = await axios.delete(`https://etf-dashboard-1.onrender.com/individual_stock_dividends/${id}`);
+      const response = await axios.delete(`https://etf-dashboard-backend.onrender.com/individual_stock_dividends/${id}`);
     } catch (error) {
       setError('Failed to delete individual stock by id');
     }
@@ -36,7 +36,7 @@ const DividendTracker = () => {
 
   const deleteTotalDividends = async (id) => {
     try{
-      const response = await axios.delete('https://etf-dashboard-1.onrender.com/total_dividends');
+      const response = await axios.delete('https://etf-dashboard-backend.onrender.com/total_dividends');
       setLoading(false);
     } catch (error){
       setError('Failed to delete individual stock');
@@ -80,7 +80,7 @@ const DividendTracker = () => {
 
   const getTotalDividends = async () => {
     try {
-      const response = await axios.get('https://etf-dashboard-1.onrender.com/total_dividends');
+      const response = await axios.get('https://etf-dashboard-backend.onrender.com/total_dividends');
       setTotalDividends(response.data.total_dividends);
       setLoading(false);
     } catch (error) {
@@ -91,7 +91,7 @@ const DividendTracker = () => {
 
   const getAllStocks = async () => {
     try {
-      const response = await axios.get('https://etf-dashboard-1.onrender.com/all_stocks');
+      const response = await axios.get('https://etf-dashboard-backend.onrender.com/all_stocks');
       setAllStocks(response.data);
       const stockSymbols = Array.from(new Set(response.data.map(stock => stock.symbol)));
       stockSymbols.forEach(symbol => fetchIndividualDividends(symbol));
@@ -104,7 +104,7 @@ const DividendTracker = () => {
 
   const getCurrentMonthDividends = async () => {
     try {
-      const response = await axios.get('https://etf-dashboard-1.onrender.com/curr_month_dividends');
+      const response = await axios.get('https://etf-dashboard-backend.onrender.com/curr_month_dividends');
       const formattedData = Object.entries(response.data).map(([symbol, amount]) => ({
         symbol,
         amount
@@ -120,7 +120,7 @@ const DividendTracker = () => {
   const fetchIndividualDividends = async (symbol) => {
     try {
       setIndividualDividends([]);
-      const response = await axios.get(`https://etf-dashboard-1.onrender.com/individual_stock_dividends?symbol=${symbol}`);
+      const response = await axios.get(`https://etf-dashboard-backend.onrender.com/individual_stock_dividends?symbol=${symbol}`);
       setIndividualDividends((prevStocks) => [...prevStocks, response.data]);
     } catch (error) {
       setError('Failed to fetch individual stock dividends');
