@@ -10,7 +10,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends, getC
     useEffect(() => {
         const getStockById = async () => {
             try {
-                const response = await axios.get(`https://etf-dashboard-1.onrender.com/individual_stock_dividends/${id}`);
+                const response = await axios.get(`https://etf-dashboard-backend.onrender.com/individual_stock_dividends/${id}`);
                 setSymbol(response.data.symbol);
                 setShares(response.data.shares);
                 setPurchaseDate(moment(response.data.purchase_date).format("YYYY-MM-DD"));
@@ -35,7 +35,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends, getC
     
       const handleCreateStock = async (e) => {
         e.preventDefault();
-        const url = `https://etf-dashboard-1.onrender.com/individual_stock_dividends`;
+        const url = `https://etf-dashboard-backend.onrender.com/individual_stock_dividends`;
         const data = {
             symbol: symbol,
             shares: shares,
@@ -54,7 +54,7 @@ const StockModal = ({ active, handleModal, id, setError, getTotalDividends, getC
     
       const handleUpdateStock = async (e) => {
         e.preventDefault();
-        const url = `https://etf-dashboard-1.onrender.com/individual_stock_dividends/${id}`;
+        const url = `https://etf-dashboard-backend.onrender.com/individual_stock_dividends/${id}`;
         const data = {
             symbol: symbol,
             shares: shares,
